@@ -558,10 +558,10 @@ let AddTwoNumbers2 l1 l2 = //for Int32 value only
     reverseBack1 list sum [] n 
 
 let AddTwoNumbers3 l1 l2 = //for Int32 values only/
-    let sum = (+) (l1 |> List.mapi (fun i item -> item * pown 10 i) |> List.fold (+) 0) (l2 |> List.mapi (fun i item -> item * pown 10 i) |> List.fold (+) 0) 
-    let n = if ((int (log10 (float sum)) + 1) - 1) > 0 then (int (log10 (float sum)) + 1) - 1 else 0
-    let rec reverseBack sum acc n = if ((sum - (sum / pown 10 n) * pown 10 n), n) = (0, 0) then (sum / pown 10 n) :: acc else reverseBack (sum - (sum / pown 10 n) * pown 10 n) ((sum / pown 10 n) :: acc) (n - 1)    
-    reverseBack sum [] n 
+    let s = (+) (l1 |> List.mapi (fun i x -> x * pown 10 i) |> List.fold (+) 0) (l2 |> List.mapi (fun i x -> x * pown 10 i) |> List.fold (+) 0) 
+    let n = match ((int (log10 (float s)) + 1) - 1) > 0 with true -> (int (log10 (float s)) + 1) - 1 | false -> 0
+    let rec rb s acc n = match ((s - (s / pown 10 n) * pown 10 n), n) = (0, 0) with true -> (s / pown 10 n) :: acc | false -> rb (s - (s / pown 10 n) * pown 10 n) ((s / pown 10 n) :: acc) (n - 1)    
+    rb s [] n 
     
 printfn "AddTwoNumbers2 %A" <| AddTwoNumbers2 [1;4;3] [1;7;1]                                  
 printfn "AddTwoNumbers2 %A" <| AddTwoNumbers2 [2;4;3] [5;6;4]    
