@@ -2,6 +2,8 @@
 open System
 open System.Text.RegularExpressions
 
+open CopyingOrMovingFiles
+
 //**********Katas from codewar and problems/algorythms from leetcode
 
 
@@ -432,9 +434,7 @@ printfn "twoSum %A" <| twoSum [|2;7;11;15|] 17
 //*************************************** leetcode.com Task "Add Two Numbers" **************************************************
 
 (*
-Input: l1 = [1,4,3], l2 = [1,7,1]
-Output: [2,1,5]
-Explanation: 341 + 171 = 512.
+Input: l1 = [1,4,3], l2 = [1,7,1]; Output: [2,1,5]; Explanation: 341 + 171 = 512
 
 Input: l1 = [2,4,3], l2 = [5,6,4]
 Output: [7,0,8]
@@ -531,7 +531,7 @@ printfn "%A" <| list2
 let AddTwoNumbers2 l1 l2 = //for Int32 value only
 
     let reverse list = list |> List.mapi (fun i item -> item * pown 10 i) |> List.fold (+) 0 
-    let sum = (+) (reverse l1) (reverse l2)  //sum -> Int32 values only
+    let sum = (+) (reverse l1) (reverse l2)  //sum -> Int32 value only
     let n = 
         let n = (int (log10 (float sum)) + 1) - 1
         match (>) n 0 with
@@ -577,6 +577,57 @@ printfn "%A" <| list2
      
 //let result = x * (10.0 ** float n)
 //x is the number you want to multiply by 10 raised to the power of n.
+
+
+//******************************* Free Monad **********************************************
+
+type Free<'a, 'b> =
+    | Pure of 'a
+    | Free of 'b
+
+type InstructionSet<'a> =
+    | CopyFile of ('a * 'a)
+    | MoveFile of ('a * 'a)
+
+type Program<'a> = Free<'a, InstructionSet<'a>>
+
+let private mapI f = function
+    | CopyFile x -> Free (CopyFile x) |> f
+    | MoveFile x -> Free (MoveFile x) |> f
+
+let rec bind f = function
+    | Free x -> x |> mapI (bind f)
+    | Pure x -> f x
+
+let rec interpret program =
+    match program with
+    | Pure x -> x
+    | Free (CopyFile (srcPath, destPath)) ->
+                                            let result = copyFiles srcPath destPath
+                                            interpret (Pure result)
+    | Free (MoveFile (srcPath, destPath)) ->
+                                            let result = moveFiles srcPath destPath
+                                            interpret (Pure result)
+
+// Example computation
+let computation1 = 
+    Free (CopyFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test\copy.txt"))
+
+let computation2 = 
+    Free (MoveFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test1\move.txt"))
+
+let computation3 = 
+    Free (CopyFile (@"e:\UVstarterLog\test1\move.txt", @"e:\UVstarterLog\log.txt"))   
+  
+// Interpret the computation and execute it
+let freeMonadResult1 = interpret computation1
+let freeMonadResult2 = interpret computation2
+let freeMonadResult3 = interpret computation3
+
+printfn "freeMonadResult1 %A" freeMonadResult1
+printfn "freeMonadResult2 %A" freeMonadResult2
+printfn "freeMonadResult2 %A" freeMonadResult3
+Console.ReadKey() |> ignore
 
 //********************************************************************************************************************
 
@@ -665,6 +716,9 @@ let immutableVariant2 () =
     goThroughFsharpTicketsAsync 1 [] |> Async.AwaitTask
     *)     
 immutableVariant2 () |> ignore  
+
+
+
 
 //******************************* Reader Monad **********************************************
 // Define a type alias for the reader monad
