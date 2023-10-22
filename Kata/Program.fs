@@ -586,8 +586,8 @@ type Free<'a, 'b> =
     | Free of 'b
 
 type InstructionSet<'a> =
-    | CopyFile of ('a * 'a)
-    | MoveFile of ('a * 'a)
+    | CopyFile of (string * string)
+    | MoveFile of (string * string)
 
 type Program<'a> = Free<'a, InstructionSet<'a>>
 
@@ -602,12 +602,38 @@ let rec bind f = function
 let rec interpret program =
     match program with
     | Pure x -> x
-    | Free (CopyFile (srcPath, destPath)) ->
-                                            let result = copyFiles srcPath destPath
-                                            interpret (Pure result)
-    | Free (MoveFile (srcPath, destPath)) ->
-                                            let result = moveFiles srcPath destPath
-                                            interpret (Pure result)
+    | Free instruction ->
+        bind (fun () ->
+            match instruction with
+            | CopyFile (srcPath, destPath) ->
+                let result = copyFiles srcPath destPath
+                Pure result
+            | MoveFile (srcPath, destPath) ->
+                let result = moveFiles srcPath destPath
+                Pure result
+        )
+
+(*
+type ProgramBuilder () =
+    member this.Bind (program, f) =
+        bind f program
+    member this.Return x =
+        Pure x 
+
+let programBuilder = ProgramBuilder ()
+
+let program = 
+    programBuilder 
+        {
+            let! result1 = Free (CopyFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test\copy.txt"))
+            let! result2 = Free (MoveFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test1\move.txt"))
+            return result1
+        }
+
+let interpretedResult = interpret program
+printfn "interpretedResult %A" interpretedResult
+*)
+
 
 // Example computation
 let computation1 = 
