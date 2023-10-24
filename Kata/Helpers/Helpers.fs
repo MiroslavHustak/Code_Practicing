@@ -80,6 +80,7 @@ module CopyingOrMovingFiles =
 
     let private cmdBuilder = CommandLineProgramBuilder  
     
+    [<Struct>]
     type private Config =
         {
             source: string
@@ -87,14 +88,36 @@ module CopyingOrMovingFiles =
             fileName: string
         }
 
-    let rec private interpret config msg result f = 
+    [<Struct>]
+    type private IO = 
+        | Copy
+        | Move 
+
+    let rec private interpret config io = 
 
         let source = config.source
         let destination = config.destination
-       
+
+        let msg = sprintf "Chyba %s při čtení cesty " 
+        
+        let result path1 path2 = 
+            match path1 with
+            | Ok path1  -> 
+                        path1
+            | Error err -> 
+                        printf "%s%s" err path2 
+                        Console.ReadKey() |> ignore 
+                        System.Environment.Exit(1) 
+                        String.Empty
+
+        let f = 
+            match io with
+            | Copy -> fun p1 p2 -> File.Copy(p1, p2, true) //(fun _ _ -> ())           
+            | Move -> fun p1 p2 -> File.Move(p1, p2, true) //(fun _ _ -> ())
+      
         function
         | Pure x -> x
-        | Free (SourceFilepath next)  ->
+        | Free (SourceFilepath next) ->
                                       let sourceFilepath source =                                        
                                           pyramidOfDoom
                                              {
@@ -106,8 +129,8 @@ module CopyingOrMovingFiles =
                                                      ), Error <| msg "č.1"
                                                  return Ok value
                                              }      
-                                      next (result (sourceFilepath source) source) |> interpret config msg result f
-        | Free (DestinFilepath next)  ->
+                                      next (result (sourceFilepath source) source) |> interpret config io
+        | Free (DestinFilepath next) ->
                                       let destinFilepath destination =                                        
                                           pyramidOfDoom
                                              {
@@ -119,8 +142,8 @@ module CopyingOrMovingFiles =
                                                      ), Error <| msg "č.3"
                                                  return Ok value
                                              }                                        
-                                      next (result (destinFilepath destination) destination) |> interpret config msg result f
-        | Free (CopyOrMove (s, _)) -> 
+                                      next (result (destinFilepath destination) destination) |> interpret config io
+        | Free (CopyOrMove (s, _))   -> 
                                       let sourceFilepath = fst s
                                       let destinFilepath = snd s  
                                       let resultInt = 
@@ -128,39 +151,24 @@ module CopyingOrMovingFiles =
                                           let x = 42 //simulation of a hypothetical integer result of the previous function
                                           x 
                                       resultInt  //next |> interpret config 
-
+    
     let private config = 
         {
             source = @"e:\UVstarterLog\log.txt" //kontrola s FileInfo
             destination = @"e:\UVstarterLog\test\" //kontrola s DirectoryInfo
             fileName = "test.txt"
-        }
+        }   
 
-    let private msg = sprintf "Chyba %s při čtení cesty " 
-
-    let private result path1 path2 = 
-        match path1 with
-        | Ok path1  -> 
-                    path1
-        | Error err -> 
-                    printf "%s%s" err path2 
-                    Console.ReadKey() |> ignore 
-                    System.Environment.Exit(1) 
-                    String.Empty
-   
-    let private fc = (fun p1 p2 -> File.Copy(p1, p2, true)) //(fun _ _ -> ())
-    let private fm = (fun p1 p2 -> File.Move(p1, p2, true)) //(fun _ _ -> ())
-
-    let private copyOrMoveFiles config msg result f =
+    let private copyOrMoveFiles config io =
         
         cmdBuilder 
             {
                 let! sourceFilepath = Free (SourceFilepath Pure)                
                 let! destinFilepath = Free (DestinFilepath Pure) 
                 return! Free (CopyOrMove ((sourceFilepath, sprintf "%s%s" (destinFilepath) config.fileName), Pure 0))
-            } |> interpret config msg result f
+            } |> interpret config io
 
-    let copyFiles () = copyOrMoveFiles config msg result fc
-    let moveFiles () = copyOrMoveFiles config msg result fm
+    let copyFiles () = copyOrMoveFiles config Copy
+    let moveFiles () = copyOrMoveFiles config Move
    
     
