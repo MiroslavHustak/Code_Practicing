@@ -2,7 +2,10 @@
 open System
 open System.Text.RegularExpressions
 
-open CopyingOrMovingFiles
+open Helpers.CopyingOrMovingFiles
+
+
+printfn "copyFiles %i" <| copyFiles ()
 
 //**********Katas from codewar and problems/algorythms from leetcode
 
@@ -581,79 +584,7 @@ printfn "%A" <| list2
 
 //******************************* Free Monad **********************************************
 
-type Free<'a, 'b> =
-    | Pure of 'a
-    | Free of 'b
 
-type InstructionSet<'a> =
-    | CopyFile of (string * string)
-    | MoveFile of (string * string)
-
-type Program<'a> = Free<'a, InstructionSet<'a>>
-
-let private mapI f = function
-    | CopyFile x -> Free (CopyFile x) |> f
-    | MoveFile x -> Free (MoveFile x) |> f
-
-let rec bind f = function
-    | Free x -> x |> mapI (bind f)
-    | Pure x -> f x
-
-let rec interpret program =
-    match program with
-    | Pure x -> x
-    | Free instruction ->
-        bind (fun () ->
-            match instruction with
-            | CopyFile (srcPath, destPath) ->
-                let result = copyFiles srcPath destPath
-                Pure result
-            | MoveFile (srcPath, destPath) ->
-                let result = moveFiles srcPath destPath
-                Pure result
-        )
-
-(*
-type ProgramBuilder () =
-    member this.Bind (program, f) =
-        bind f program
-    member this.Return x =
-        Pure x 
-
-let programBuilder = ProgramBuilder ()
-
-let program = 
-    programBuilder 
-        {
-            let! result1 = Free (CopyFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test\copy.txt"))
-            let! result2 = Free (MoveFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test1\move.txt"))
-            return result1
-        }
-
-let interpretedResult = interpret program
-printfn "interpretedResult %A" interpretedResult
-*)
-
-
-// Example computation
-let computation1 = 
-    Free (CopyFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test\copy.txt"))
-
-let computation2 = 
-    Free (MoveFile (@"e:\UVstarterLog\log.txt", @"e:\UVstarterLog\test1\move.txt"))
-
-let computation3 = 
-    Free (CopyFile (@"e:\UVstarterLog\test1\move.txt", @"e:\UVstarterLog\log.txt"))   
-  
-// Interpret the computation and execute it
-let freeMonadResult1 = interpret computation1
-let freeMonadResult2 = interpret computation2
-let freeMonadResult3 = interpret computation3
-
-printfn "freeMonadResult1 %A" freeMonadResult1
-printfn "freeMonadResult2 %A" freeMonadResult2
-printfn "freeMonadResult2 %A" freeMonadResult3
-Console.ReadKey() |> ignore
 
 //********************************************************************************************************************
 
