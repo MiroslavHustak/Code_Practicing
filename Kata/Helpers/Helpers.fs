@@ -147,7 +147,7 @@ module CopyingOrMovingFiles =
                                       let sourceFilepath = fst s
                                       let destinFilepath = snd s  
                                       let resultInt = 
-                                          f sourceFilepath destinFilepath 
+                                          f sourceFilepath destinFilepath //copying or moving                                          
                                           let x = 42 //simulation of a hypothetical integer result of the previous function
                                           x 
                                       resultInt  //next |> interpret config 
