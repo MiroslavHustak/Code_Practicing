@@ -170,5 +170,19 @@ module CopyingOrMovingFiles =
 
     let copyFiles () = copyOrMoveFiles config Copy
     let moveFiles () = copyOrMoveFiles config Move
-   
-    
+
+
+module Miscellaneous = 
+
+    type PureFunction<'a> = 'a
+    type ImpureFunction1<'T, 'TError> = Result<'T, 'TError>
+    type ImpureFunction2<'b> = 'b    
+       
+    let impureMultiplyAndPrintWithCustomType x y : ImpureFunction2<unit> = printfn "%i" (x * y) 
+                  
+    let pureAdd a b : PureFunction<int> = a + b
+        
+    let impureDivide a b : ImpureFunction1<int, string> =
+        match b = 0 with
+        | true -> Ok (a / b)
+        | false ->  Error "Division by zero"

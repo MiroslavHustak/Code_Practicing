@@ -632,22 +632,22 @@ let immutableVariant2 () =
 
         async
             {
-                let uri = Uri $"{fsharpIssuesUrl}/{ticketNumber}"    
+                let uri = Uri <| sprintf"%s/%i" fsharpIssuesUrl ticketNumber
                 let! response = client.GetAsync uri |> Async.AwaitTask
                 return response.IsSuccessStatusCode
             }
     
-    let rec goThroughFsharpTicketsAsync ticketNumber acc =
+    let rec goThroughFsharpTicketsAsync (ticketNumber: int) (acc: int list) =
 
         async
             {
-                match! doesTicketExistAsync ticketNumber with
+                match! doesTicketExistAsync (ticketNumber: int) with
                 | true  ->
                         let _ = ticketNumber :: acc
-                        printfn $"Found a PR or issue #{ticketNumber}."
+                        printfn "Found a PR or issue #%i." ticketNumber
                         return! goThroughFsharpTicketsAsync (ticketNumber + 1) acc
                 | false ->
-                        printfn $"#{ticketNumber} is not created yet."
+                        printfn "#%i is not created yet." ticketNumber
                         return List.rev acc  
             }
 
