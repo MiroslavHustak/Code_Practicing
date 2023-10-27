@@ -184,5 +184,5 @@ module Miscellaneous =
         
     let impureDivide a b : ImpureFunction1<int, string> =
         match b = 0 with
-        | true -> Ok (a / b)
-        | false ->  Error "Division by zero"
+        | true  -> Ok (a / b)
+        | false -> Error "Division by zero"
