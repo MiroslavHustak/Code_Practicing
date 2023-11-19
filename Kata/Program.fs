@@ -4,8 +4,25 @@ open System.Text.RegularExpressions
 
 open Helpers.CopyingOrMovingFiles
 
+open CopyExtended
 
-printfn "copyFiles %i" <| copyFiles ()
+type PureFunction<'T> = 'T
+type ImpureFunction<'T> = 'T
+
+let pureFn : PureFunction<int> = 1
+let impureFn : ImpureFunction<string -> unit> = printfn "%s"
+let impureFn1 : ImpureFunction<unit> = printfn "%s" "Ahoj"
+let impureFn2 : ImpureFunction<int> = 
+    printfn "%s" "Ahoj"
+    let x = "Ahoj" |> String.length
+    x
+let pureFn1 : PureFunction<int> = 
+    let x = "Ahoj" |> String.length
+    x
+
+//CopyExtended.CopyDirContent64 (@"c:\Users\User\Music\", @"e:\", 0, 0)
+
+//printfn "copyFiles %i" <| copyFiles ()
 
 //**********Katas from codewar and problems/algorythms from leetcode
 
