@@ -196,7 +196,7 @@ module Miscellaneous =
         let result = String.length x
         result
 
-    let impureDivide path b : PureFunction<int, string> =
+    let impureDivide path b : ImpureFunction<int, string> =
         let a = Path.GetFullPath(path).Length
         match b = 0 with
         | true  -> Ok (a / b)
