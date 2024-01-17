@@ -6,6 +6,133 @@ open Helpers.CopyingOrMovingFiles
 
 open CopyExtended
 
+//Free monads are just a general way of turning functors into monads.
+//A free monad is a sequence of actions where subsequent actions can depend on the result of previous ones.
+
+let toString (n: int) = string n
+let toArray (s: string) = [s]
+let intToStringArray n = toArray (toString n) 
+
+let intToStringArray1 n = toArray << toString 
+let intToStringArray2 n = toString >> toArray 
+
+let testMinBy =
+    [1; 1; 1; 2; 1]
+    |> List.filter (fun item -> item >= 7)
+    |> List.isEmpty 
+    |> function
+        | false -> 
+               [1; 1; 1; 2; 1]
+               |> List.filter 
+                   (fun item -> item >= 7) 
+               |> List.min
+        | true -> 0
+
+printfn "minBy %A" <| testMinBy
+
+let x y = 4*y + 1
+let z x = 2 + x
+
+let q = x 4
+let result22 = z q
+printfn "%i" result22
+
+let fc y = 3 + 4*y 
+printfn "%i" (fc 4)
+
+let fc1 = x >> z
+printfn "%i" (fc1 4)
+
+let x1 y1 = 4*y1 + 1
+let z1 x1 = 2 + 2*x1
+
+let q1 = x1 4
+let result222 = z1 q1
+printfn "%i" result222
+
+let fc3 y = 4 + 8*y 
+printfn "%i" (fc3 4)
+
+let fc4 = x1 >> z1
+printfn "%i" (fc4 4)
+
+//*******************************************************
+let f x = x + 1
+let g x = x * 2
+
+let h x = x |> g |> f
+let h1 = g >> f
+
+
+printfn "result h %A" <| h 11
+printfn "result h1 %A" <| h1 11
+
+let fn n = 1.0 / (sqrt (float n) + sqrt (float (n + 1)))
+  
+let resultSqrt = [ 1..99 ] |> List.map fn |> List.sum
+
+printfn "result1 %A" <| resultSqrt
+printfn "result2 %A" <| (sqrt 100.0 - sqrt 1.0)
+
+//Advent of code 2023 - dotaz na F# Slack
+let lookup =
+    Map.empty
+        .Add("nine", '9')
+        .Add("eight", '8')
+        .Add("seven", '7')
+        .Add("six", '6')
+        .Add("five", '5')
+        .Add("four", '4')
+        .Add("three", '3')
+        .Add("two", '2')
+        .Add("one", '1')
+
+(*
+//kod z F# Slack
+let Adjust line : string =
+    let mutable nl: string = line
+
+    for KeyValue(k, v) in lookup do
+        let mutable i = line.IndexOf(k)
+        while i > -1 do
+            nl <- nl[0..i-1] + string(v) + nl[i+1..]
+            i <- line.IndexOf(k, i + 1)
+    nl
+
+*)
+
+let lookup1 =
+    Map
+        [
+            "nine", '9'
+            "eight", '8'
+            "seven", '7'
+            "six", '6'
+            "five", '5'
+            "four", '4'
+            "three", '3'
+            "two", '2'
+            "one", '1'
+        ]
+
+let adjustImmutable1 line =
+    lookup   
+    |> Map.fold (fun (acc: string) k v -> acc.Replace(k, sprintf "%c%s" v k.[1..])) line  
+          
+
+let adjustImmutable2 line =
+    lookup1   
+    |> Map.fold (fun (acc: string) k v -> match acc.Contains(k) with true -> acc.Replace(k, sprintf "%c%s" v k.[1..]) | false -> acc) line 
+        
+
+let originalLine = "eight three two one"
+let adjustedLine = adjustImmutable1 originalLine
+printfn "Original: %s\nAdjusted: %s" originalLine adjustedLine
+printfn "%A" <| adjustImmutable2 originalLine
+
+printfn "adjustImmutable2 %A" <| adjustImmutable2 originalLine
+
+
 type PureFunction<'T> = 'T
 type ImpureFunction<'T> = 'T
 
@@ -19,6 +146,7 @@ let impureFn2 : ImpureFunction<int> =
 let pureFn1 : PureFunction<int> = 
     let x = "Ahoj" |> String.length
     x
+
 
 //CopyExtended.CopyDirContent64 (@"c:\Users\User\Music\", @"e:\", 0, 0)
 
@@ -614,11 +742,11 @@ let naiveVariant () =
     
     let doesTicketExistAsync ticketNumber = 
         task 
-                {
+            {
                 let uri = Uri $"{fsharpIssuesUrl}/{ticketNumber}"
                 let! response = client.GetAsync uri
                 return response.IsSuccessStatusCode
-                }
+            }
     
     let goThroughFsharpTicketsAsync() = 
             
@@ -688,8 +816,6 @@ let immutableVariant2 () =
 immutableVariant2 () |> ignore  
 
 
-
-
 //******************************* Reader Monad **********************************************
 // Define a type alias for the reader monad
 type Reader<'e, 'a> = 'e -> 'a
@@ -739,7 +865,7 @@ let addWithEnvironment2 (env: int) : int =
     value + 10
    
 // Example: Using the functions
-let result22 = readEnvironment2 5   // Result: 5
+let result2255 = readEnvironment2 5   // Result: 5
 let result2222 = addWithEnvironment2 5  // Result: 15
 
 //*******************************************************************************************************************

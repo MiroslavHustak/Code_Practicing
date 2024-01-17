@@ -174,15 +174,30 @@ module CopyingOrMovingFiles =
 
 module Miscellaneous = 
 
+    open System.IO
     type PureFunction<'a> = 'a
-    type ImpureFunction1<'T, 'TError> = Result<'T, 'TError>
-    type ImpureFunction2<'b> = 'b    
+    type PureFunction<'T, 'TError> = Result<'T, 'TError>
+    type ImpureFunction<'T, 'TError> = Result<'T, 'TError>
+    type ImpureFunction<'b> = 'b    
        
-    let impureMultiplyAndPrintWithCustomType x y : ImpureFunction2<unit> = printfn "%i" (x * y) 
+    let impureMultiplyAndPrintWithCustomType x y : ImpureFunction<unit> = printfn "%i" (x * y) 
                   
     let pureAdd a b : PureFunction<int> = a + b
         
-    let impureDivide a b : ImpureFunction1<int, string> =
+    let pureDivide a b : PureFunction<int, string> =
+        match b = 0 with
+        | true  -> Ok (a / b)
+        | false -> Error "Division by zero"
+
+    let impure path : ImpureFunction<int> =
+
+        let x = Path.GetFullPath(path)
+
+        let result = String.length x
+        result
+
+    let impureDivide path b : PureFunction<int, string> =
+        let a = Path.GetFullPath(path).Length
         match b = 0 with
         | true  -> Ok (a / b)
         | false -> Error "Division by zero"
