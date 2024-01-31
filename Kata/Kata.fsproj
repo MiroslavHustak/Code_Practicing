@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="Helpers\Helpers.fs" />
+    <Compile Include="CoinGame.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

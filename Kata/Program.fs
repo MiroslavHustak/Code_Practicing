@@ -4,7 +4,13 @@ open System.Text.RegularExpressions
 
 open Helpers.CopyingOrMovingFiles
 
+open CoinGame
+
 open CopyExtended
+
+main ()
+
+System.Environment.Exit(0)
 
 //Free monads are just a general way of turning functors into monads.
 //A free monad is a sequence of actions where subsequent actions can depend on the result of previous ones.
@@ -23,8 +29,7 @@ let testMinBy =
     |> function
         | false -> 
                [1; 1; 1; 2; 1]
-               |> List.filter 
-                   (fun item -> item >= 7) 
+               |> List.filter ((<=) 7) 
                |> List.min
         | true -> 0
 
