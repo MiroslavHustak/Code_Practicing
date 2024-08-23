@@ -2,17 +2,23 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="HtmlUtilities.fs" />
     <Compile Include="Helpers\Helpers.fs" />
     <Compile Include="CoinGame.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CopyExtended\CopyExtended.csproj" />
+    <PackageReference Include="FSharp.Data" Version="6.4.0" />
+    <PackageReference Include="FsHttp" Version="14.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="8.0.400-beta.24321.3" />
   </ItemGroup>
 
 </Project>

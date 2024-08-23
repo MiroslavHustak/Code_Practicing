@@ -1,19 +1,94 @@
 ﻿
 open System
+open System.IO
 open System.Text.RegularExpressions
 
-open Helpers.CopyingOrMovingFiles
+open FSharp.Control
 
 open CoinGame
 
-open CopyExtended
+let divide x = float 42 / float x  
 
-main ()
+[-10..-1] @ [1..10] 
+|> List.iter (fun item -> printfn "%A" <| divide item) 
+
+[-10..10] 
+|> List.filter (fun item -> item <> 0)
+|> List.iter (fun item -> printfn "%A" <| divide item) 
+
+[-10..10] 
+|> List.filter (fun item -> item <> 0)
+|> List.iter (fun item -> printfn "%A" <| divide item) 
+
+[-10..10] 
+|> List.map (fun item -> item <> 0 |> function true -> Some item | false -> None) |> List.choose id
+|> List.iter (fun item -> printfn "%A" <| divide item) 
+
+let twice22 = (+)
+
+twice22 2.0 |> Console.WriteLine
+twice22 2 |> Console.WriteLine
+
+let twice2 (x: 'a) = x + x
+
+//twice2 2.0 |> Console.WriteLine
+//twice2 2 |> Console.WriteLine
+
+let inline twice x = x + x
+
+twice 2.0 |> Console.WriteLine
+twice 2 |> Console.WriteLine
+
+(*
+Each call to the inline function is replaced by inline code with its own type inference, thus the compiler effectively converts the above to:
+
+(fun (x:float) -> x + x)(2.0) |> Console.WriteLine
+(fun (x:int) -> x + x)(2) |> Console.WriteLine
+*)
+
+type A = { thing: int }
+type B = { label: string }
+
+type ThingThatShows =
+    static member show(x: A) = sprintf "%A" x
+    static member show(x: B) = sprintf "%A" x
+
+{ thing = 98 } |> ThingThatShows.show |> Console.WriteLine
+{ label = "Car" } |> ThingThatShows.show |> Console.WriteLine 
+
+
+//Statically resolved type parameters allow the compiler to resolve the type at compile time
+type C = { thing: int }
+    with static member show a = sprintf "%A" a
+
+type D = { label: string }
+    with static member show b = sprintf "%A" b
+
+let inline show (x:^t) =
+    (^t: (static member show: ^t -> string) x)
+//There are several types of constraints that you can apply to statically resolved type parameters, a member constraint is one of them.
+
+{ thing = 98 } |> show |> Console.WriteLine
+{ label = "Car" } |> show |> Console.WriteLine
+
+(*
+//doesn't work because the compiler cannot infer the type at compile time, leading to ambiguity when resolving the static member.
+type C = { thing: int }
+    with static member show a = sprintf "%A" a
+type D = { label: string }
+    with static member show b = sprintf "%A" b
+
+let inline show (x:^t) =
+    (^t: (static member show: ^t -> string) (x))
+
+{ thing = 98 } |> show |> Console.WriteLine
+{ label = "Car" } |> show |> Console.WriteLine
+*)
+
+
+HtmlUtilities.main ()
 
 System.Environment.Exit(0)
-
-//Free monads are just a general way of turning functors into monads.
-//A free monad is a sequence of actions where subsequent actions can depend on the result of previous ones.
 
 let toString (n: int) = string n
 let toArray (s: string) = [s]
@@ -36,7 +111,7 @@ let testMinBy =
 printfn "minBy %A" <| testMinBy
 
 let x y = 4*y + 1
-let z x = 2 + x
+let z = (+) 2
 
 let q = x 4
 let result22 = z q
