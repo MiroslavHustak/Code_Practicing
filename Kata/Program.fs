@@ -7,6 +7,53 @@ open FSharp.Control
 
 open CoinGame
 
+open BenchmarkDotNet.Attributes
+open BenchmarkDotNet.Running
+
+//Prime Number Calculation
+let isPrime n =
+    if n < 2 then false
+    else
+        let rec check i =
+            i * i > n || (n % i <> 0 && check (i + 1))
+        check 2
+
+let findPrimes count =
+    let rec find n primesFound =
+        if primesFound = count then n - 1
+        else if isPrime n then find (n + 1) (primesFound + 1)
+        else find (n + 1) primesFound
+    find 2 0
+
+// Factorial function
+let factorial n  = [1..n] |> List.fold (fun acc x -> acc * x) 1 
+
+//Fibonacci Sequence Calculation  
+//Simulating a long-running CPU-bound operation
+let rec fib2 n1 =
+    match n1 <= 1 with
+    | true  -> n1
+    | false -> fib2 (n1 - 1) + fib2 (n1 - 2)    
+
+let parallelProcessFn n n1 parallelFn initFn =
+    //printfn "%s" (sprintf "Start: %s" (DateTime.Now.ToString("HH:mm:ss")))    
+    initFn n (fun _ -> fib2 n1) |> parallelFn (fun (item : int) -> item |> ignore)    
+    //initFn n (fun _ -> lazy fib2 n1) |> parallelFn (fun (item: Lazy<int>) -> item.Force() |> ignore)  
+    //printfn "%s" (sprintf "End: %s" (DateTime.Now.ToString("HH:mm:ss")))   
+
+type MyBenchmark() = 
+    [<Benchmark>]
+    member _.Test1 () = parallelProcessFn 50 40 Array.Parallel.iter Array.init 
+    [<Benchmark>]
+    member _.Test2 () = parallelProcessFn 50 40 List.Parallel.iter List.init
+
+let summary = BenchmarkRunner.Run<MyBenchmark>()
+
+//parallelProcessFn 50 40 Array.Parallel.iter Array.init 
+//parallelProcessFn 50 40 List.Parallel.iter List.init
+
+Console.ReadKey () |> ignore
+
 let divide x = float 42 / float x  
 
 [-10..-1] @ [1..10] 

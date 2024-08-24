@@ -7,13 +7,16 @@
 
   <ItemGroup>
     <Compile Include="HtmlUtilities.fs" />
+    <Compile Include="Helpers\ListParallel.fs" />
     <Compile Include="Helpers\Helpers.fs" />
     <Compile Include="CoinGame.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
     <PackageReference Include="FSharp.Data" Version="6.4.0" />
+    <PackageReference Include="FSharp.Quotations.Evaluator" Version="2.1.0" />
     <PackageReference Include="FsHttp" Version="14.5.0" />
   </ItemGroup>
 
