@@ -36,21 +36,43 @@ let rec fib2 n1 =
     | false -> fib2 (n1 - 1) + fib2 (n1 - 2)    
 
 let parallelProcessFn n n1 parallelFn initFn =
-    //printfn "%s" (sprintf "Start: %s" (DateTime.Now.ToString("HH:mm:ss")))    
-    initFn n (fun _ -> fib2 n1) |> parallelFn (fun (item : int) -> item |> ignore)    
-    //initFn n (fun _ -> lazy fib2 n1) |> parallelFn (fun (item: Lazy<int>) -> item.Force() |> ignore)  
-    //printfn "%s" (sprintf "End: %s" (DateTime.Now.ToString("HH:mm:ss")))   
+    printfn "%s" (sprintf "Start: %s" (DateTime.Now.ToString("HH:mm:ss")))    
+    initFn n (fun _ -> lazy fib2 n1) |> parallelFn (fun (item: Lazy<int>) -> item.Force() |> ignore)  
+    printfn "%s" (sprintf "End: %s" (DateTime.Now.ToString("HH:mm:ss")))   
 
 type MyBenchmark() = 
     [<Benchmark>]
-    member _.Test1 () = parallelProcessFn 50 40 Array.Parallel.iter Array.init 
+    member _.Test1 () = parallelProcessFn 200 40 Array.Parallel.iter Array.init 
     [<Benchmark>]
-    member _.Test2 () = parallelProcessFn 50 40 List.Parallel.iter List.init
+    member _.Test2 () = parallelProcessFn 200 40 List.Parallel.iter List.init
 
-let summary = BenchmarkRunner.Run<MyBenchmark>()
+//let summary = BenchmarkRunner.Run<MyBenchmark>()
 
-//parallelProcessFn 50 40 Array.Parallel.iter Array.init 
-//parallelProcessFn 50 40 List.Parallel.iter List.init
+(*
+printfn "%s" (sprintf "Start: %s" (DateTime.Now.ToString("HH:mm:ss"))) 
+[|1..200|] |> Array.Parallel.iter (fun _ -> fib2 40 |> ignore)
+printfn "%s" (sprintf "End: %s" (DateTime.Now.ToString("HH:mm:ss")))  
+
+printfn "%s" (sprintf "Start: %s" (DateTime.Now.ToString("HH:mm:ss"))) 
+[1..200] |> List.Parallel.iter (fun (item : int) -> fib2 40 |> ignore)
+printfn "%s" (sprintf "End: %s" (DateTime.Now.ToString("HH:mm:ss"))) 
+
+parallelProcessFn 200 40 Array.Parallel.iter Array.init 
+parallelProcessFn 200 40 List.Parallel.iter List.init
+
+*)
+
+//Or another test variant
+let test1 n n1 = [|1..n|] |> Array.Parallel.iter (fun _ -> fib2 n1 |> ignore)
+let test2 n n1 = [1..n] |> List.Parallel.iter (fun (item : int) -> fib2 n1 |> ignore)
+
+type MyBenchmark2() = 
+    [<Benchmark>]
+    member _.Test1 () = test1 200 40 
+    [<Benchmark>]
+    member _.Test2 () = test2 200 40 
+
+let summary = BenchmarkRunner.Run<MyBenchmark2>()
 
 Console.ReadKey () |> ignore
 
