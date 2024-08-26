@@ -10,6 +10,9 @@ open CoinGame
 open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
 
+open System.Collections.Generic
+open System.Threading
+
 //Prime Number Calculation
 let isPrime n =
     if n < 2 then false
@@ -68,11 +71,48 @@ let test2 n n1 = [1..n] |> List.Parallel.iter (fun (item : int) -> fib2 n1 |> ig
 
 type MyBenchmark2() = 
     [<Benchmark>]
-    member _.Test1 () = test1 200 40 
+    member _.Test1 () = test1 1000 10 
     [<Benchmark>]
-    member _.Test2 () = test2 200 40 
+    member _.Test2 () = test2 1000 10 
 
-let summary = BenchmarkRunner.Run<MyBenchmark2>()
+//let summary = BenchmarkRunner.Run<MyBenchmark2>()
+
+let test11 n n1 (threadIds: HashSet<int>) =
+    [|1..n|] |> Array.Parallel.iter (fun _ ->
+        // Track the thread ID
+        lock threadIds (fun () -> 
+            threadIds.Add(Thread.CurrentThread.ManagedThreadId) |> ignore
+        )
+        fib2 n1 |> ignore
+    )
+
+let test22 n n1 (threadIds: HashSet<int>) =
+    [1..n] |> List.Parallel.iter (fun (item: int) ->
+        // Track the thread ID
+        lock threadIds (fun () -> 
+            threadIds.Add(Thread.CurrentThread.ManagedThreadId) |> ignore
+        )
+        fib2 n1 |> ignore
+    )
+
+    //dotnet run -c Release
+type MyBenchmark3() =
+    let threadIdsTest1 = HashSet<int>()
+    let threadIdsTest2 = HashSet<int>()
+
+    [<Benchmark>]
+    member _.Test1() =
+        threadIdsTest1.Clear()
+        test11 15 42 threadIdsTest1
+        printfn "Test1 - Number of unique threads used: %d" threadIdsTest1.Count
+
+    [<Benchmark>]
+    member _.Test2() =
+        threadIdsTest2.Clear()
+        test22 15 42 threadIdsTest2
+        printfn "Test2 - Number of unique threads used: %d" threadIdsTest2.Count 
+
+let summary = BenchmarkRunner.Run<MyBenchmark3>()
 
 Console.ReadKey () |> ignore
 
