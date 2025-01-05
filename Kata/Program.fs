@@ -42,15 +42,15 @@ type XorBuilder = XorBuilder with
             Error "Invalid number of values for XOR computation"
 
     /// A placeholder for Zero (empty list)
-    member _.Zero() = []
+    member _.Zero() = [] //kdyz neni zadna hodnota
 
 let xor = XorBuilder
 
 //The yield keyword is used to produce values within the computation. However, if you don't explicitly specify the type of the values being yielded,
 //the compiler may infer their type as unit, which is the default for expressions that don't return a value.
-let xor2 (a: bool) (b: bool) = xor { a; b }
+let xor2 (a : bool) (b : bool) = xor { a; b }
 
-let xor3 (a: bool) (b: bool) (c: bool) : Result<bool, string> = xor { a; b; c }    
+let xor3 (a : bool) (b : bool) (c : bool) : Result<bool, string> = xor { a; b; c }    
 
 let xor22 a b = (a && not b) || (not a && b)   
 let xor33 a b c = (a && not b && not c) || (not a && b && not c) || (not a && not b && c)
@@ -59,12 +59,106 @@ printfn "xor22 %b" <| xor22 true false
 printfn "xor33 %b" <| xor33 true false true
 
 match xor2 true false with
-| Ok value -> printfn "xor2 %b" value
+| Ok value  -> printfn "xor2 %b" value
 | Error err -> printfn "xor2 %s" err
 
 match xor3 true false true with
-| Ok value -> printfn "xor3 %b" value
+| Ok value  -> printfn "xor3 %b" value
 | Error err -> printfn "xor3 %s" err
+
+// Define the TemplateBuilder type
+open System
+
+// Define the TemplateBuilder type
+type TemplateBuilder = TemplateBuilder with
+    // Yield: Accepts a function and returns it wrapped in a list
+    member _.Yield(func: unit) = []
+
+    // Combine: Concatenates two lists of functions
+    member _.Combine(_, _) = ()
+    // member _.Combine(funcs1, funcs2) = funcs1 @ funcs2
+
+    member _.Delay(func) = func
+
+    // Run: Executes the accumulated list of functions
+    member _.Run(funcs) =
+        let actions = funcs()
+        actions |> List.iter (fun action -> action())
+
+    // Zero: Represents an empty list of functions
+    member _.Zero() = []
+
+    [<CustomOperation("myTestCEPrint1")>]
+    member _.MyTestCEPrint1(funcs) =
+        funcs @ [fun _ -> printfn "Ahoj"]
+
+    [<CustomOperation("myTestCEPrint2")>]
+    member _.MyTestCEPrint2(funcs) =
+        funcs @ [fun _ -> printfn "Nazdar"]
+
+    [<CustomOperation("myTestCEPrint3")>]
+    member _.MyTestCEPrint3(funcs) =
+        funcs @ [fun _ -> printfn "Hello"]
+
+// Instantiate the builder
+let templateBuilder = TemplateBuilder
+
+templateBuilder
+    { 
+        myTestCEPrint1 
+        myTestCEPrint2 
+    }
+
+templateBuilder
+    {
+        myTestCEPrint1 
+        myTestCEPrint2 
+        myTestCEPrint3 
+    }
+
+type TemplateBuilderWithParam = TemplateBuilderWithParam with
+    // Yield: Accepts a function and returns it wrapped in a list
+    member _.Yield(func: unit) = []
+
+    // Combine: Concatenates two lists of functions
+    member _.Combine(funcs1, funcs2) = funcs1 @ funcs2
+
+    // Delay: Delays the execution by returning the function itself
+    member _.Delay(func) = func
+
+    // Run: Executes the accumulated list of functions
+    member _.Run(funcs) =
+        let actions = funcs()
+        actions |> List.iter (fun action -> action())
+
+    // Zero: Represents an empty list of functions
+    member _.Zero() = []
+
+    // Custom operation for myTestCEPrint1 with a parameter
+    [<CustomOperation("myTestCEPrint1")>]
+    member _.MyTestCEPrint1(funcs, message: string) =
+        funcs @ [fun () -> printfn "%s" message]
+
+    // Custom operation for myTestCEPrint2 with a parameter
+    [<CustomOperation("myTestCEPrint2")>]
+    member _.MyTestCEPrint2(funcs, message: string) =
+        funcs @ [fun () -> printfn "%s" message]
+
+    // Custom operation for myTestCEPrint3 with a parameter
+    [<CustomOperation("myTestCEPrint3")>]
+    member _.MyTestCEPrint3(funcs, message: string) =
+        funcs @ [fun () -> printfn "%s" message]
+
+// Instantiate the builder
+let templateBuilderWithParam = TemplateBuilderWithParam
+
+// Example usage of the computation expression with parameters
+templateBuilderWithParam
+    {
+        myTestCEPrint1 "Ahoj2"
+        myTestCEPrint2 "Nazdar2"
+        myTestCEPrint3 "Hello2"
+    }
 
 Console.ReadKey() |> ignore
 
