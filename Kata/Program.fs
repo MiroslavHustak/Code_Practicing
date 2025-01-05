@@ -16,7 +16,7 @@ open BenchmarkDotNet.Attributes
 type XorBuilder = XorBuilder with
 
     /// Add a value from the computation block
-    member _.Yield(value : bool) = [value]
+    member _.Yield(value : bool) : bool list = [value]
 
     // Combine intermediate results
     // The Combine method receives two arguments: the result of the first computation and the computation that follows.
@@ -24,10 +24,10 @@ type XorBuilder = XorBuilder with
 
     // Delay computation (no-op in this case)
     // In more complex computation expressions, Delay can be used to wrap computations in a way that they are only executed when needed, enabling lazy evaluation patterns
-    member _.Delay(func: unit -> bool list) = func() //jen prevede dale
+    member _.Delay(func : unit -> bool list) = func() //jen prevede dale
 
     /// Final computation for the CE block
-    member _.Run(values: bool list) =
+    member _.Run(values : bool list) =
         match values.Length with
         | 2 ->
             let a = values |> List.item 0
@@ -38,14 +38,17 @@ type XorBuilder = XorBuilder with
             let b = values |> List.item 1
             let c = values |> List.item 2
             Ok ((a && not b && not c) || (not a && b && not c) || (not a && not b && c)) // XOR logic for 3 values
-        | _ -> Error "Invalid number of values for XOR computation"
+        | _ ->
+            Error "Invalid number of values for XOR computation"
 
     /// A placeholder for Zero (empty list)
     member _.Zero() = []
 
 let xor = XorBuilder
 
-let xor2 (a: bool) (b: bool) : Result<bool, string> = xor { a; b }
+//The yield keyword is used to produce values within the computation. However, if you don't explicitly specify the type of the values being yielded,
+//the compiler may infer their type as unit, which is the default for expressions that don't return a value.
+let xor2 (a: bool) (b: bool) = xor { a; b }
 
 let xor3 (a: bool) (b: bool) (c: bool) : Result<bool, string> = xor { a; b; c }    
 
