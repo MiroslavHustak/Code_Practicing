@@ -3,15 +3,67 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 
+open System.Threading
+open System.Collections.Generic
+
 open FSharp.Control
 
 open CoinGame
 
-open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
+open BenchmarkDotNet.Attributes
 
-open System.Collections.Generic
-open System.Threading
+type XorBuilder = XorBuilder with
+
+    /// Add a value from the computation block
+    member _.Yield(value : bool) = [value]
+
+    // Combine intermediate results
+    // The Combine method receives two arguments: the result of the first computation and the computation that follows.
+    member _.Combine(previous : bool list, following : bool list) = previous @ following
+
+    // Delay computation (no-op in this case)
+    // In more complex computation expressions, Delay can be used to wrap computations in a way that they are only executed when needed, enabling lazy evaluation patterns
+    member _.Delay(func: unit -> bool list) = func() //jen prevede dale
+
+    /// Final computation for the CE block
+    member _.Run(values: bool list) =
+        match values.Length with
+        | 2 ->
+            let a = values |> List.item 0
+            let b = values |> List.item 1
+            Ok ((a && not b) || (not a && b)) // XOR logic for 2 values
+        | 3 ->
+            let a = values |> List.item 0
+            let b = values |> List.item 1
+            let c = values |> List.item 2
+            Ok ((a && not b && not c) || (not a && b && not c) || (not a && not b && c)) // XOR logic for 3 values
+        | _ -> Error "Invalid number of values for XOR computation"
+
+    /// A placeholder for Zero (empty list)
+    member _.Zero() = []
+
+let xor = XorBuilder
+
+let xor2 (a: bool) (b: bool) : Result<bool, string> = xor { a; b }
+
+let xor3 (a: bool) (b: bool) (c: bool) : Result<bool, string> = xor { a; b; c }    
+
+let xor22 a b = (a && not b) || (not a && b)   
+let xor33 a b c = (a && not b && not c) || (not a && b && not c) || (not a && not b && c)
+
+printfn "xor22 %b" <| xor22 true false 
+printfn "xor33 %b" <| xor33 true false true
+
+match xor2 true false with
+| Ok value -> printfn "xor2 %b" value
+| Error err -> printfn "xor2 %s" err
+
+match xor3 true false true with
+| Ok value -> printfn "xor3 %b" value
+| Error err -> printfn "xor3 %s" err
+
+Console.ReadKey() |> ignore
 
 //Prime Number Calculation
 let isPrime n =
