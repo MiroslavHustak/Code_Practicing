@@ -10,10 +10,43 @@ open MathNet.Numerics.LinearAlgebra.Double
 open MathNet.Numerics.Distributions
 
 module MachineLearning = 
+
+    let private tolerance = 1e-4
+    let private learningRate = 0.01
+    let private iterations = 100000
+    let private samples = 10000
+  
+    type private Increment =
+        | UpdateState of int  
+        | CheckState  of AsyncReplyChannel<int>
+
+    let private reportProgress (currentProgress, increment) =  currentProgress + increment
+
+    let private actor =
+        MailboxProcessor<Increment>
+            .StartImmediate
+                <|
+                fun inbox 
+                    ->
+                    let rec loop n = 
+                        async
+                            { 
+                               match! inbox.Receive() with
+                               | UpdateState i 
+                                   ->
+                                   let updated = reportProgress (n, i)
+                                   return! loop updated
+
+                               | CheckState  replyChannel 
+                                   ->
+                                   replyChannel.Reply n
+                                   return! loop n
+                            }
+                    loop 0     
         
     let machineLearningArray () =
 
-        let mutable counter = 0
+        //let mutable counter = 0
 
         // Generate synthetic data: y = 2 * x1 + 3 * x2 + noise
         let generateMockData (numSamples : int) =
@@ -31,12 +64,12 @@ module MachineLearning =
                     ([|1.0; x1; x2|], y) // Include bias term (1.0)
                 )           
         
-        // metoda nejmensich ctvercu (least squares method, take zvana squared error method, tady mean squared error
-        let leastSquares (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) =
+        // metoda nejmensich ctvercu (least squares method, squared error) method
+        let meanSquaredError (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) =
 
             let predictions = X * theta
             let errors = predictions - y
-            (errors.PointwisePower 2).Sum() / (2.0 * float X.RowCount)
+            (errors.PointwisePower 2).Sum() / (2.0 * float X.RowCount) //mean
          
         (*
         let gradientDescent3 (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) (alpha : float) (iterations : int) =
@@ -68,25 +101,27 @@ module MachineLearning =
                 match iteration >= maxIterations with
                 | true
                     ->
-                    counter <- counter + 1
+                    //counter <- counter + 1
+                    actor.Post <| UpdateState 1
                     currentTheta
                 | false 
                     ->
-                    counter <- counter + 1
+                    //counter <- counter + 1
+                    actor.Post <| UpdateState 1
                     let predictions : Vector<float> = X * currentTheta
                     let errors = predictions - y
                     let gradient = (X.Transpose() * errors) / m
                     let newTheta = currentTheta - alpha * gradient
-                    let newCost = leastSquares X y newTheta
+                    let newCost = meanSquaredError X y newTheta
                     
-                    match abs (previousCost - newCost) < 1e-30 with // tolerance for normal use: 1e-4 
+                    match abs (previousCost - newCost) < tolerance with // tolerance for normal use: 1e-4 
                     | true  -> newTheta
                     | false -> loop newTheta newCost (iteration + 1)
                     
-            loop theta (leastSquares X y theta) 0     
+            loop theta (meanSquaredError X y theta) 0     
 
         // Generate mock data samples
-        let data = generateMockData 100000 //10000 samples
+        let data = generateMockData samples //10000 samples
 
         let X = 
             DenseMatrix.ofRowArrays (
@@ -102,22 +137,20 @@ module MachineLearning =
         
         // Initialize parameters
         let initialTheta = DenseVector.zero 3 // [bias; weight1; weight2]
-        let learningRate = 0.01
-        let iterations = 100000
-        
+              
         // Train the model
         let theta : Vector<float> = gradientDescent X y initialTheta learningRate iterations 
         
         // Print results
         printfn "Learned parameters: %A" theta
-        printfn "Counter: %i" counter
-        printfn "Final cost: %f" (leastSquares X y theta)
+        printfn "Counter: %i"  <| actor.PostAndReply (fun replyChannel -> CheckState replyChannel)
+        //printfn "Counter: %i" counter  
+        printfn "Final cost: %f" (meanSquaredError X y theta)
         
         // Make a prediction for a new input [1.0; 5.0; 5.0]
         let newInput = DenseVector.ofArray [|1.0; 5.0; 5.0|]
         let prediction = newInput * theta
-        printfn "Prediction for input [1.0; 5.0; 5.0]: %f" prediction
-    
+        printfn "Prediction for input [1.0; 5.0; 5.0]: %f" prediction    
 
     let machineLearningList () =
            
@@ -139,11 +172,11 @@ module MachineLearning =
                     ([1.0; x1; x2], y) // Include bias term (1.0)
                 )           
            
-        let leastSquares (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) =
-    
+        let meanSquaredError (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) =
+
             let predictions = X * theta
             let errors = predictions - y
-            (errors.PointwisePower 2).Sum() / (2.0 * float X.RowCount)
+            (errors.PointwisePower 2).Sum() / (2.0 * float X.RowCount) //mean
               
         let gradientDescent (X : Matrix<float>) (y : Vector<float>) (theta : Vector<float>) (alpha : float) (maxIterations : int) =
             
@@ -154,24 +187,26 @@ module MachineLearning =
                 match iteration >= maxIterations with
                 | true
                     ->
-                    counter <- counter + 1
+                    //counter <- counter + 1
+                    actor.Post <| UpdateState 1
                     currentTheta
                 | false 
                     ->
-                    counter <- counter + 1
+                    //counter <- counter + 1
+                    actor.Post <| UpdateState 1
                     let predictions : Vector<float> = X * currentTheta
                     let errors = predictions - y
                     let gradient = (X.Transpose() * errors) / m
                     let newTheta = currentTheta - alpha * gradient
-                    let newCost = leastSquares X y newTheta
+                    let newCost = meanSquaredError X y newTheta
                     
-                    match abs (previousCost - newCost) < 1e-30 with // tolerance for normal use: 1e-4 
+                    match abs (previousCost - newCost) < tolerance with // tolerance for normal use: 1e-4 
                     | true  -> newTheta
                     | false -> loop newTheta newCost (iteration + 1)
                     
-            loop theta (leastSquares X y theta) 0     
+            loop theta (meanSquaredError X y theta) 0     
     
-        let data = generateMockData 100000 //10000 samples
+        let data = generateMockData samples //10000 samples
     
         let X = 
             DenseMatrix.ofRowList (
@@ -184,15 +219,14 @@ module MachineLearning =
             )
             
         let initialTheta = DenseVector.zero 3 // [bias; weight1; weight2]
-        let learningRate = 0.01
-        let iterations = 100000            
            
         let theta = gradientDescent X y initialTheta learningRate iterations
             
         // Print results
         printfn "Learned parameters: %A" theta
-        printfn "Counter: %i" counter
-        printfn "Final cost: %f" (leastSquares X y theta)
+        printfn "Counter: %i"  <| actor.PostAndReply (fun replyChannel -> CheckState replyChannel)
+        //printfn "Counter: %i" counter
+        printfn "Final cost: %f" (meanSquaredError X y theta)
             
         // Make a prediction for a new input [1.0; 5.0; 5.0]
         let newInput = DenseVector.ofList [1.0; 5.0; 5.0]
