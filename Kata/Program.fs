@@ -12,6 +12,20 @@ open CoinGame
 
 open BenchmarkDotNet.Running
 open BenchmarkDotNet.Attributes
+open MachineLearning.MachineLearning
+
+let printCurrentTime () =
+        let currentTime = DateTime.Now.ToString("HH:mm:ss:fff")
+        printfn "Current time: %s" currentTime
+
+//solveLinearSystem ()
+printCurrentTime ()
+machineLearningArray ()
+printCurrentTime ()
+printfn "*************************************" 
+printCurrentTime ()
+machineLearningList ()
+printCurrentTime ()
 
 type XorBuilder = XorBuilder with
 

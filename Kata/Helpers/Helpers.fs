@@ -9,10 +9,10 @@ module Option =
             | false -> None
 
     let internal fromBool value cond : 'a option = 
-     cond                      
-     |> function   
-         | true  -> Some value  
-         | false -> None
+        cond                      
+        |> function   
+            | true  -> Some value  
+            | false -> None
 
     let internal ofNull (value: 'nullableValue) =
         match System.Object.ReferenceEquals(value, null) with //The "value" type can be even non-nullable, and the library method will still work.

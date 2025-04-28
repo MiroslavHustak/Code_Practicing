@@ -9,19 +9,22 @@
     <Compile Include="HtmlUtilities.fs" />
     <Compile Include="Helpers\ListParallel.fs" />
     <Compile Include="Helpers\Helpers.fs" />
+    <Compile Include="MachineLearning.fs" />
     <Compile Include="CoinGame.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
-    <PackageReference Include="FSharp.Data" Version="6.4.0" />
+    <PackageReference Include="FSharp.Data" Version="6.6.0" />
     <PackageReference Include="FSharp.Quotations.Evaluator" Version="2.1.0" />
-    <PackageReference Include="FsHttp" Version="14.5.0" />
+    <PackageReference Include="FsHttp" Version="15.0.1" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <PackageReference Include="MathNet.Numerics.FSharp" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="8.0.400-beta.24321.3" />
+    <PackageReference Update="FSharp.Core" Version="9.0.202" />
   </ItemGroup>
 
 </Project>
